@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budak Terpuji KP2027 - Misi 1 (Kasih Sayang)</title>
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background: #061109;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            color: #fff;
+            position: relative;
+        }
+
+        /* 3D CANVAS BACKGROUND (KAMPUNG 80-AN) */
+        #bg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* HUD TOP BAR */
+        .hud-top {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .timer-box {
+            background: rgba(15, 23, 42, 0.85);
+            border: 2px solid #ef4444;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fca5a5;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+            backdrop-filter: blur(8px);
+        }
+
+        .score-box {
+            background: rgba(15, 23, 42, 0.85);
+            border: 2px solid #fbbf24;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fbbf24;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+            backdrop-filter: blur(8px);
+        }
+
+        /* LAYOUT UTAMA (KIRI: HAIWAN PURBA 3D | KANAN: KAD SOALAN) */
+        .game-layout {
+            position: absolute;
+            top: 80px;
+            left: 0;
+            width: 100%;
+            height: calc(100vh - 80px);
+            display: flex;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        /* BAHAGIAN KIRI (HERO PURBA 3D) */
+        .hero-section {
+            width: 40%;
+            height: 100%;
+            position: relative;
+        }
+
+        #hero-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* BAHAGIAN KANAN (KAD SOALAN & INTERAKSI) */
+        .question-section {
+            width: 60%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            pointer-events: auto;
+        }
+
+        /* KAD SOALAN slide ZUUUPPP */
+        .question-card {
+            width: 100%;
+            max-width: 550px;
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            border: 4px solid #38bdf8;
+            backdrop-filter: blur(12px);
+            transform: translateX(150%);
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.4s ease;
+            text-align: center;
+        }
+
+        .question-card.active {
+            transform: translateX(0);
+        }
+
+        .q-header {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: #fbbf24;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
+        }
+
+        .q-text {
+            font-size: 1.35rem;
+            font-weight: 600;
+            line-height: 1.5;
+            margin-bottom: 25px;
+            color: #ffffff;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn-opt {
+            padding: 18px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn-true {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: 2px solid #34d399;
+        }
+
+        .btn-false {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border: 2px solid #fca5a5;
+        }
+
+        .btn-opt:hover {
+            transform: translateY(-4px) scale(1.03);
+            box-shadow: 0 12px 22px rgba(0,0,0,0.4);
+        }
+
+        /* MODAL KOTA HARTA KARUN (PENAMAT MISI) */
+        .chest-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .chest-modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .chest-icon {
+            font-size: 6rem;
+            cursor: pointer;
+            animation: bounce 1.2s infinite alternate;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 20px #fbbf24);
+        }
+
+        @keyframes bounce {
+            0% { transform: translateY(0) scale(1); }
+            100% { transform: translateY(-20px) scale(1.1); }
+        }
+
+        .chest-title {
+            font-size: 2.2rem;
+            color: #fbbf24;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .chest-score {
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .status-badge {
+            font-size: 1.2rem;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-weight: bold;
+            margin-bottom: 25px;
+        }
+
+        .status-badge.good {
+            background: #10b981;
+            color: #fff;
+            box-shadow: 0 0 20px #10b981;
+        }
+
+        .status-badge.bad {
+            background: #ef4444;
+            color: #fff;
+            box-shadow: 0 0 20px #ef4444;
+        }
+
+        .btn-finish {
+            padding: 16px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #000;
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(251, 191, 36, 0.5);
+            transition: all 0.3s;
+        }
+
+        .btn-finish:hover {
+            transform: scale(1.08);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BACKGROUND 3D KAMPUNG 80-AN -->
+    <div id="bg-canvas"></div>
+
+    <!-- HUD BAR ATAS -->
+    <div class="hud-top">
+        <div class="timer-box" id="timerDisplay">⏱️ MASA: 10:00</div>
+        <div class="score-box" id="scoreDisplay">💎 MARKAH: 0</div>
+    </div>
+
+    <!-- UTAMA: HAIWAN PURBA & KAD SOALAN -->
+    <div class="game-layout">
+        <div class="hero-section">
+            <div id="hero-canvas"></div>
+        </div>
+
+        <div class="question-section">
+            <div class="question-card" id="qCard">
+                <div class="q-header" id="qHeader">MISI 1 • SOALAN 1 / 8</div>
+                <div class="q-text" id="qText">Memuat turun soalan...</div>
+                <div class="options-grid">
+                    <button class="btn-opt btn-true" onclick="submitAnswer(true)">✔ BETUL</button>
+                    <button class="btn-opt btn-false" onclick="submitAnswer(false)">✖ SALAH</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL HARTA KARUN PENAMAT MISI -->
+    <div class="chest-modal" id="chestModal">
+        <div class="chest-icon" onclick="openChest()">🧰</div>
+        <div class="chest-title" id="chestTitle">KLIK HARTA KARUN UNTUK KLAIM!</div>
+        <div class="chest-score" id="finalScoreText">Markah Kumpul: 0</div>
+        <div class="status-badge" id="statusBadge">Status Sahsiah...</div>
+        <button class="btn-finish" id="btnFinish" style="display:none;" onclick="returnToMain()">KEMBALI KE PAPARAN UTAMA ➔</button>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. SOUND SYSTEM & VOICE NARRATOR (TTS)
+        // ==========================================
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'zuuu') { // Bunyi kad masuk Zuuuppp
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            } else if (type === 'correct') { // Bunyi Betul (+50)
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.35);
+            } else if (type === 'wrong') { // Bunyi Salah (-5)
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(180, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+            }
+        }
+
+        // Voice Reader (Text-To-Speech BM)
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Stop aura suara lama
+                const utter = new SpeechSynthesisUtterance(text);
+                utter.lang = 'ms-MY';
+                utter.rate = 0.9;
+                window.speechSynthesis.speak(utter);
+            }
+        }
+
+        // ==========================================
+        // 2. DATA SOALAN MISI 1 (KASIH SAYANG & EMPATI)
+        // ==========================================
+        const questions = [
+            { text: "Adam ternampak seekor anak kucing kelaparan di tepi jalan, Adam memberi kucing itu makanan.", ans: true, color: "#38bdf8" },
+            { text: "Raihan memijak dan memetik bunga di taman sekolah untuk suka-suka.", ans: false, color: "#ec4899" },
+            { text: "Mia menolak kawan yang berjalan lambat di tangga sekolah.", ans: false, color: "#a855f7" },
+            { text: "Nur membantu adiknya menyusun beg sekolah sebelum tidur.", ans: true, color: "#10b981" },
+            { text: "Apabila nampak kawan jatuh basikal, kita patut mengetawakannya bersama rakan.", ans: false, color: "#ef4444" },
+            { text: "Mamu menyiram pokok bunga di halaman rumah setiap petang.", ans: true, color: "#f59e0b" },
+            { text: "Zack membuang botol plastik ke dalam sungai tempat ikan berenang.", ans: false, color: "#06b6d4" },
+            { text: "Iris mengucapkan terima kasih dan tersenyum kepada ibu selepas makan.", ans: true, color: "#8b5cf6" }
+        ];
+
+        let currentQIndex = 0;
+        let totalScore = 0;
+        let timeLeft = 600; // 10 Minit (600 Saat)
+
+        // ==========================================
+        // 3. BACKGROUND 3D KAMPUNG 80-AN (ORGANIC)
+        // ==========================================
+        const bgContainer = document.getElementById('bg-canvas');
+        const sceneBg = new THREE.Scene();
+        sceneBg.background = new THREE.Color(0x0a1c12);
+        sceneBg.fog = new THREE.FogExp2(0x0a1c12, 0.05);
+
+        const camBg = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camBg.position.set(0, 3, 10);
+
+        const rendBg = new THREE.WebGLRenderer({ antialias: true });
+        rendBg.setSize(window.innerWidth, window.innerHeight);
+        bgContainer.appendChild(rendBg.domElement);
+
+        // Light Kampung
+        sceneBg.add(new THREE.AmbientLight(0xdcfce7, 0.7));
+        const sun = new THREE.DirectionalLight(0xfef08a, 0.9);
+        sun.position.set(5, 12, 8);
+        sceneBg.add(sun);
+
+        // Pokok-pokok Organik 80-an (Bukan geometri tegar)
+        const treesGroup = new THREE.Group();
+        for (let i = 0; i < 15; i++) {
+            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.9 });
+            const leavesMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.6 });
+
+            const tree = new THREE.Group();
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.25, 2.5, 8), trunkMat);
+            trunk.position.y = 1.25;
+            tree.add(trunk);
+
+            const leaves = new THREE.Mesh(new THREE.DodecahedronGeometry(1.2), leavesMat);
+            leaves.position.y = 2.8;
+            tree.add(leaves);
+
+            tree.position.set((Math.random() - 0.5) * 20, 0, (Math.random() - 0.5) * 15 - 2);
+            treesGroup.add(tree);
+        }
+        sceneBg.add(treesGroup);
+
+        // Air Terjun & Sungai (Animated Mesh)
+        const riverGeo = new THREE.PlaneGeometry(4, 15);
+        const riverMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.1, metalness: 0.8 });
+        const river = new THREE.Mesh(riverGeo, riverMat);
+        river.rotation.x = -Math.PI / 2;
+        river.position.set(0, -0.1, -2);
+        sceneBg.add(river);
+
+        // Ikan Melompat (Fish particle)
+        const fishGeo = new THREE.ConeGeometry(0.12, 0.4, 8);
+        const fishMat = new THREE.MeshStandardMaterial({ color: 0xf97316 });
+        const fish = new THREE.Mesh(fishGeo, fishMat);
+        fish.rotation.x = Math.PI / 2;
+        fish.position.set(0, -1, -2);
+        sceneBg.add(fish);
+
+        let fishTimer = 0;
+
+        // ==========================================
+        // 4. MODEL HAIWAN PURBA 3D (KIRI - MELOMPAT)
+        // ==========================================
+        const heroContainer = document.getElementById('hero-canvas');
+        const sceneH = new THREE.Scene();
+        const camH = new THREE.PerspectiveCamera(45, heroContainer.clientWidth / heroContainer.clientHeight, 0.1, 1000);
+        camH.position.set(0, 0.8, 2.8);
+
+        const rendH = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        rendH.setSize(heroContainer.clientWidth, heroContainer.clientHeight);
+        heroContainer.appendChild(rendH.domElement);
+
+        sceneH.add(new THREE.AmbientLight(0xffffff, 0.8));
+        const lightH = new THREE.DirectionalLight(0xffffff, 0.8);
+        lightH.position.set(2, 4, 3);
+        sceneH.add(lightH);
+
+        // Cute Hero Mesh
+        const heroGroup = new THREE.Group();
+        const heroBodyMat = new THREE.MeshStandardMaterial({ color: 0x22c55e, roughness: 0.3 });
+        const heroBody = new THREE.Mesh(new THREE.SphereGeometry(0.5, 32, 32), heroBodyMat);
+        heroBody.position.y = 0.4;
+        heroGroup.add(heroBody);
+
+        const heroHead = new THREE.Mesh(new THREE.SphereGeometry(0.38, 32, 32), heroBodyMat);
+        heroHead.position.set(0, 0.85, 0.15);
+        heroGroup.add(heroHead);
+
+        // Visor HUD Canggih
+        const visor = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.1, 0.15), new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x38bdf8 }));
+        visor.position.set(0, 0.95, 0.38);
+        heroGroup.add(visor);
+
+        sceneH.add(heroGroup);
+
+        // Loop Animasi Visual 3D
+        let clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = clock.getElapsedTime();
+
+            // Pokok berayun ditiup angin
+            treesGroup.children.forEach((tr, idx) => {
+                tr.rotation.z = Math.sin(time * 1.5 + idx) * 0.03;
+            });
+
+            // Ikan melompat dari air
+            fishTimer += 0.03;
+            if (fishTimer > 4) {
+                fish.position.y = Math.sin((fishTimer - 4) * Math.PI) * 1.5;
+                fish.position.x = Math.sin(fishTimer) * 1.2;
+                if (fishTimer > 5) fishTimer = 0;
+            }
+
+            // Haiwan Purba melompat-lompat comel
+            heroGroup.position.y = Math.abs(Math.sin(time * 3)) * 0.2;
+            heroGroup.rotation.y = Math.sin(time * 1.5) * 0.2;
+
+            rendBg.render(sceneBg, camBg);
+            rendH.render(sceneH, camH);
+        }
+        animate();
+
+        // ==========================================
+        // 5. ALIRAN PERMAINAN & KAD SOALAN "ZUUUPPP"
+        // ==========================================
+        function loadQuestion(index) {
+            if (index >= questions.length) {
+                finishMission();
+                return;
+            }
+
+            const card = document.getElementById('qCard');
+            card.classList.remove('active'); // Tarik keluar kard
+
+            setTimeout(() => {
+                const q = questions[index];
+                document.getElementById('qHeader').innerText = `MISI 1 • SOALAN ${index + 1} / ${questions.length}`;
+                document.getElementById('qText').innerText = q.text;
+                card.style.borderColor = q.color;
+
+                playSound('zuuu');
+                card.classList.add('active'); // Zuuuppp masuk!
+
+                // Baca soalan dan jawapan menerusi Audio Voice
+                speakText(`Soalan ${index + 1}. ${q.text}. Betul atau Salah?`);
+            }, 400);
+        }
+
+        function submitAnswer(userAns) {
+            const currentQ = questions[currentQIndex];
+            
+            if (userAns === currentQ.ans) {
+                playSound('correct');
+                totalScore += 50;
+            } else {
+                playSound('wrong');
+                totalScore = Math.max(0, totalScore - 5);
+            }
+
+            document.getElementById('scoreDisplay').innerText = `💎 MARKAH: ${totalScore}`;
+            currentQIndex++;
+            loadQuestion(currentQIndex);
+        }
+
+        // ==========================================
+        // 6. TIMER 10 MINIT & HARTA KARUN
+        // ==========================================
+        const timerInterval = setInterval(() => {
+            timeLeft--;
+            let mins = Math.floor(timeLeft / 60);
+            let secs = timeLeft % 60;
+            document.getElementById('timerDisplay').innerText = `⏱️ MASA: ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                finishMission();
+            }
+        }, 1000);
+
+        function finishMission() {
+            clearInterval(timerInterval);
+            window.speechSynthesis.cancel();
+            
+            // Simpan status siap Misi 1 ke LocalStorage
+            localStorage.setItem('budakTerpuji_chapDone', '1');
+            localStorage.setItem('budakTerpuji_lastScore', totalScore);
+
+            document.getElementById('chestModal').classList.add('show');
+            document.getElementById('finalScoreText').innerText = `Markah Terkumpul: ${totalScore} / 400`;
+        }
+
+        function openChest() {
+            playSound('correct');
+            document.getElementById('chestTitle').innerText = "HARTA KARUN DIBUKA!";
+            const badge = document.getElementById('statusBadge');
+
+            if (totalScore >= 40) {
+                badge.innerText = "✨ TAHNIAH! Budak Terpuji BERSINAR NUR MURNI!";
+                badge.className = "status-badge good";
+                speakText("Tahniah! Budak Terpuji bersinar nur murni!");
+            } else {
+                badge.innerText = "⚠️ AMARAN! Budak Terpuji BEKAS COMOT & CACAT!";
+                badge.className = "status-badge bad";
+                speakText("Amaran! Budak Terpuji menjadi comot dan cacat kerana kurang kasih sayang!");
+            }
+
+            document.getElementById('btnFinish').style.display = "inline-block";
+        }
+
+        function returnToMain() {
+            window.location.href = 'main.html';
+        }
+
+        // Mulakan soalan pertama
+        window.onload = () => {
+            loadQuestion(0);
+        };
+    </script>
+</body>
+</html>
