@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budak Terpuji KP2027 - Pilih Haiwan Purba Canggih 3D</title>
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background: radial-gradient(circle at center, #1b1035 0%, #080514 100%);
+            min-height: 100vh;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            overflow-x: hidden;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(to right, #38bdf8, #f472b6, #fbbf24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1.5px;
+            text-shadow: 0 0 20px rgba(244, 114, 182, 0.3);
+        }
+
+        p.sub-title {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            margin-top: 4px;
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1100px;
+            gap: 20px;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            width: 100%;
+        }
+
+        @media (max-width: 850px) {
+            .hero-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 550px) {
+            .hero-grid { grid-template-columns: 1fr; }
+        }
+
+        .hero-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(12px);
+            position: relative;
+        }
+
+        .hero-card:hover {
+            transform: translateY(-5px);
+            border-color: #38bdf8;
+            box-shadow: 0 8px 25px rgba(56, 189, 248, 0.3);
+        }
+
+        .hero-card.focused {
+            border-color: #f472b6;
+            background: rgba(244, 114, 182, 0.15);
+            box-shadow: 0 0 30px rgba(244, 114, 182, 0.6);
+            transform: scale(1.03);
+        }
+
+        .canvas-container {
+            width: 100%;
+            height: 180px;
+            border-radius: 14px;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.4) 100%);
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .hero-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .hero-title {
+            font-size: 0.8rem;
+            color: #fbbf24;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .hero-desc {
+            font-size: 0.75rem;
+            color: #cbd5e1;
+            line-height: 1.3;
+        }
+
+        /* Seksyen Kawalan Joystick & Butang */
+        .controls-panel {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 15px 30px;
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+            margin-top: 10px;
+        }
+
+        /* Joystick Bulat */
+        .joystick-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .joystick-label {
+            font-size: 0.75rem;
+            color: #38bdf8;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .joystick-base {
+            width: 90px;
+            height: 90px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.2) 0%, rgba(15, 23, 42, 0.8) 100%);
+            border: 3px solid #38bdf8;
+            border-radius: 50%;
+            position: relative;
+            touch-action: none;
+            cursor: grab;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+
+        .joystick-base:active {
+            cursor: grabbing;
+        }
+
+        .joystick-stick {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #38bdf8, #8b5cf6);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            pointer-events: none;
+            transition: background 0.2s;
+        }
+
+        .btn-confirm {
+            padding: 14px 35px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(90deg, #ec4899, #8b5cf6, #3b82f6);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(236, 72, 153, 0.4);
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+        }
+
+        .btn-confirm:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 12px 28px rgba(236, 72, 153, 0.6);
+        }
+
+        .btn-confirm:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: #475569;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>SATRIA HAIWAN PURBA KP2027</h1>
+        <p class="sub-title">Klik watak untuk <b>Pusingan 360° & Fokus Kamera</b> • Guna <b>Joystick Bulat</b> untuk kawal pusingan</p>
+    </header>
+
+    <div class="main-container">
+        <div class="hero-grid">
+            <!-- 1. Baby T-Rex -->
+            <div class="hero-card" id="card-0" onclick="focusAndRotateHero(0)">
+                <div class="canvas-container" id="canvas-0"></div>
+                <div class="hero-name">Rexy-Vex</div>
+                <div class="hero-title">Baby T-Rex Canggih</div>
+                <div class="hero-desc">Penaung Kejujuran • Suit Vest Neon & HUD Visor</div>
+            </div>
+
+            <!-- 2. Baby Triceratops -->
+            <div class="hero-card" id="card-1" onclick="focusAndRotateHero(1)">
+                <div class="canvas-container" id="canvas-1"></div>
+                <div class="hero-name">Cera-Glitch</div>
+                <div class="hero-title">Baby Triceratops</div>
+                <div class="hero-desc">Penjaga Adab • 3 Tanduk Kristal & Jetpack Mini</div>
+            </div>
+
+            <!-- 3. Baby Diplodocus -->
+            <div class="hero-card" id="card-2" onclick="focusAndRotateHero(2)">
+                <div class="canvas-container" id="canvas-2"></div>
+                <div class="hero-name">Dippy-Tech</div>
+                <div class="hero-title">Baby Diplodocus</div>
+                <div class="hero-desc">Penyayang & Empati • Tali Leher Neon & Cermin Holo</div>
+            </div>
+
+            <!-- 4. Baby Pterodactyl -->
+            <div class="hero-card" id="card-3" onclick="focusAndRotateHero(3)">
+                <div class="canvas-container" id="canvas-3"></div>
+                <div class="hero-name">Ptero-Sky</div>
+                <div class="hero-title">Baby Pterodactyl</div>
+                <div class="hero-desc">Cendekiawan Minda • Sayap Foton & Helmet Aero</div>
+            </div>
+
+            <!-- 5. Baby Stegosaurus -->
+            <div class="hero-card" id="card-4" onclick="focusAndRotateHero(4)">
+                <div class="canvas-container" id="canvas-4"></div>
+                <div class="hero-name">Stego-Shield</div>
+                <div class="hero-title">Baby Stegosaurus</div>
+                <div class="hero-desc">Benteng Disiplin • Plat Litar & Kasut Anti-Graviti</div>
+            </div>
+
+            <!-- 6. Baby Mammoth -->
+            <div class="hero-card" id="card-5" onclick="focusAndRotateHero(5)">
+                <div class="canvas-container" id="canvas-5"></div>
+                <div class="hero-name">Mamu-Glow</div>
+                <div class="hero-title">Baby Mammoth</div>
+                <div class="hero-desc">Penyatu Harmoni • Hoodie Cyber & Gading Pelangi</div>
+            </div>
+        </div>
+
+        <!-- Panel Kawalan Joystick -->
+        <div class="controls-panel">
+            <div class="joystick-wrapper">
+                <span class="joystick-label">KAWALAN JOYSTICK BULAT</span>
+                <div class="joystick-base" id="joystickBase">
+                    <div class="joystick-stick" id="joystickStick"></div>
+                </div>
+            </div>
+
+            <button id="btnNext" class="btn-confirm" disabled onclick="confirmSelection()">PILIH SATRIA PURBA ➔</button>
+        </div>
+    </div>
+
+    <script>
+        // System Web Audio API (Penjanaan SFX Bunyi Tanpa Fail Luar)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'select') { // Bunyi Klik & Zoom
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.2);
+            } else if (type === 'spin') { // Bunyi Pusingan 360 Spin
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(600, audioCtx.currentTime + 0.4);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.4);
+            } else if (type === 'cuteRoar') { // Bunyi Comel Haiwan Purba
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(500, audioCtx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+
+        // Konfigurasi 6 Haiwan Purba 3D Canggih
+        const heroesConfig = [
+            { name: "Rexy-Vex", bodyColor: 0x22c55e, gearColor: 0x38bdf8, type: 'rex' },
+            { name: "Cera-Glitch", bodyColor: 0xec4899, gearColor: 0xfbbf24, type: 'cera' },
+            { name: "Dippy-Tech", bodyColor: 0x38bdf8, gearColor: 0xa855f7, type: 'dippy' },
+            { name: "Ptero-Sky", bodyColor: 0xf59e0b, gearColor: 0x06b6d4, type: 'ptero' },
+            { name: "Stego-Shield", bodyColor: 0x8b5cf6, gearColor: 0x10b981, type: 'stego' },
+            { name: "Mamu-Glow", bodyColor: 0xef4444, gearColor: 0xf472b6, type: 'mamu' }
+        ];
+
+        const scenes = [];
+        const models = [];
+        let activeHeroIndex = null;
+        let isSpinning360 = false;
+
+        // Bina Model 3D Haiwan Purba Comel
+        function createCuteDino3D(containerId, config) {
+            const container = document.getElementById(containerId);
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+            camera.position.set(0, 0.8, 3.2);
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            // Light
+            const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambient);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(3, 5, 4);
+            scene.add(dirLight);
+
+            const dinoGroup = new THREE.Group();
+
+            // 1. Badan Comel Bulat (Chubby Body)
+            const bodyGeo = new THREE.SphereGeometry(0.5, 32, 32);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: config.bodyColor, roughness: 0.4 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.position.y = 0.4;
+            dinoGroup.add(body);
+
+            // 2. Kepala Comel (Cute Head)
+            const headGeo = new THREE.SphereGeometry(0.38, 32, 32);
+            const head = new THREE.Mesh(headGeo, bodyMat);
+            head.position.set(0, 0.85, 0.15);
+            dinoGroup.add(head);
+
+            // 3. Mata Bulat Comel & Pipi Red
+            const eyeGeo = new THREE.SphereGeometry(0.07, 16, 16);
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x1e293b });
+            const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
+            eyeL.position.set(-0.15, 0.9, 0.48);
+            const eyeR = new THREE.Mesh(eyeGeo, eyeMat);
+            eyeR.position.set(0.15, 0.9, 0.48);
+            dinoGroup.add(eyeL);
+            dinoGroup.add(eyeR);
+
+            // 4. Pakaian Canggih Futuristik (Vest / Gear / HUD / Armor)
+            const gearGeo = new THREE.TorusGeometry(0.52, 0.05, 16, 32);
+            const gearMat = new THREE.MeshStandardMaterial({ color: config.gearColor, metalness: 0.8, roughness: 0.2, emissive: config.gearColor, emissiveIntensity: 0.4 });
+            const gear = new THREE.Mesh(gearGeo, gearMat);
+            gear.rotation.x = Math.PI / 2;
+            gear.position.y = 0.4;
+            dinoGroup.add(gear);
+
+            // Aksesori Visor / Goggle HUD
+            const visorGeo = new THREE.BoxGeometry(0.42, 0.1, 0.15);
+            const visorMat = new THREE.MeshStandardMaterial({ color: 0x00ffff, emissive: 0x00ffff, emissiveIntensity: 0.6 });
+            const visor = new THREE.Mesh(visorGeo, visorMat);
+            visor.position.set(0, 0.96, 0.38);
+            dinoGroup.add(visor);
+
+            // Ciri Spesies (Tanduk/Sayap/Plat)
+            if (config.type === 'cera') { // Triceratops Tanduk
+                const hornGeo = new THREE.ConeGeometry(0.08, 0.25, 16);
+                const hornMat = new THREE.MeshStandardMaterial({ color: config.gearColor });
+                const h1 = new THREE.Mesh(hornGeo, hornMat); h1.position.set(0, 1.15, 0.3); h1.rotation.x = 0.3;
+                dinoGroup.add(h1);
+            } else if (config.type === 'stego') { // Stego Plat
+                const plateGeo = new THREE.BoxGeometry(0.05, 0.2, 0.2);
+                const plateMat = new THREE.MeshStandardMaterial({ color: config.gearColor, emissive: config.gearColor });
+                const p1 = new THREE.Mesh(plateGeo, plateMat); p1.position.set(0, 0.8, -0.3);
+                dinoGroup.add(p1);
+            }
+
+            scene.add(dinoGroup);
+            models.push(dinoGroup);
+            scenes.push({ scene, camera, renderer });
+        }
+
+        // Inisialisasi 6 Watak
+        window.onload = () => {
+            heroesConfig.forEach((cfg, idx) => {
+                createCuteDino3D(`canvas-${idx}`, cfg);
+            });
+
+            function animate() {
+                requestAnimationFrame(animate);
+                scenes.forEach(({ scene, camera, renderer }, idx) => {
+                    // Pusingan perlahan automatik jika tidak difokuskan
+                    if (activeHeroIndex !== idx && !isSpinning360) {
+                        models[idx].rotation.y += 0.01;
+                    }
+                    renderer.render(scene, camera);
+                });
+            }
+            animate();
+            initJoystick();
+        };
+
+        // KELIK FOKUS & PUSINGAN 360 DEGREE
+        function focusAndRotateHero(index) {
+            playSound('select');
+            activeHeroIndex = index;
+
+            // Kemaskini Visual Card
+            document.querySelectorAll('.hero-card').forEach((card, idx) => {
+                if (idx === index) {
+                    card.classList.add('focused');
+                } else {
+                    card.classList.remove('focused');
+                }
+            });
+
+            const currentModel = models[index];
+            const currentCam = scenes[index].camera;
+
+            // Animasi Zoom-In Kamera
+            currentCam.position.z = 2.4;
+            setTimeout(() => { currentCam.position.z = 2.7; }, 300);
+
+            // Animasi Pusingan 360 Darjah
+            if (!isSpinning360) {
+                isSpinning360 = true;
+                playSound('spin');
+                playSound('cuteRoar');
+
+                const startRotation = currentModel.rotation.y;
+                const targetRotation = startRotation + Math.PI * 2; // Full 360°
+                const duration = 800; // ms
+                const startTime = performance.now();
+
+                function do360Spin(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    // Easing Function
+                    const easeProgress = 0.5 - Math.cos(progress * Math.PI) / 2;
+                    
+                    currentModel.rotation.y = startRotation + (targetRotation - startRotation) * easeProgress;
+
+                    if (progress < 1) {
+                        requestAnimationFrame(do360Spin);
+                    } else {
+                        isSpinning360 = false;
+                    }
+                }
+                requestAnimationFrame(do360Spin);
+            }
+
+            // Aktifkan Butang
+            const btn = document.getElementById('btnNext');
+            btn.disabled = false;
+            btn.innerText = `PILIH ${heroesConfig[index].name.toUpperCase()} ➔`;
+        }
+
+        // KAWALAN JOYSTICK BULAT (MANUAL ROTATION CONTROL)
+        function initJoystick() {
+            const base = document.getElementById('joystickBase');
+            const stick = document.getElementById('joystickStick');
+            let isDragging = false;
+            let center = { x: 0, y: 0 };
+
+            function handleStart(e) {
+                isDragging = true;
+                const rect = base.getBoundingClientRect();
+                center = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+                handleMove(e);
+            }
+
+            function handleMove(e) {
+                if (!isDragging) return;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                const deltaX = clientX - center.x;
+                const deltaY = clientY - center.y;
+                const distance = Math.min(Math.hypot(deltaX, deltaY), 35);
+                const angle = Math.atan2(deltaY, deltaX);
+
+                const stickX = Math.cos(angle) * distance;
+                const stickY = Math.sin(angle) * distance;
+
+                stick.style.transform = `translate(calc(-50% + ${stickX}px), calc(-50% + ${stickY}px))`;
+
+                // Pusingkan model yang aktif mengikut pergerakan Joystick X
+                if (activeHeroIndex !== null && models[activeHeroIndex]) {
+                    models[activeHeroIndex].rotation.y += stickX * 0.003;
+                }
+            }
+
+            function handleEnd() {
+                isDragging = false;
+                stick.style.transform = `translate(-50%, -50%)`;
+            }
+
+            base.addEventListener('mousedown', handleStart);
+            window.addEventListener('mousemove', handleMove);
+            window.addEventListener('mouseup', handleEnd);
+
+            base.addEventListener('touchstart', handleStart);
+            window.addEventListener('touchmove', handleMove);
+            window.addEventListener('touchend', handleEnd);
+        }
+
+        // Simpan Data & Pergi ke intro.html
+        function confirmSelection() {
+            if (activeHeroIndex !== null) {
+                const hero = heroesConfig[activeHeroIndex];
+                localStorage.setItem('budakTerpuji_heroNama', hero.name);
+                localStorage.setItem('budakTerpuji_heroId', activeHeroIndex);
+
+                // Pergi ke intro.html
+                window.location.href = 'intro.html';
+            }
+        }
+    </script>
+</body>
+</html>
