@@ -1,1 +1,72 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selamat Datang!</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Animasi Pelangi Lancar */
+        @keyframes rainbowGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .rainbow-text {
+            background: linear-gradient(90deg, #ff007f, #7928ca, #00dfd8, #0070f3, #ff007f);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbowGlow 6s ease infinite;
+        }
+
+        .rainbow-bg {
+            background: linear-gradient(135deg, #ff007f, #7928ca, #00dfd8, #ff4500, #ff007f);
+            background-size: 400% 400%;
+            animation: rainbowGlow 8s ease infinite;
+        }
+
+        .rainbow-border {
+            position: relative;
+        }
+
+        .rainbow-border::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 1.5rem;
+            background: linear-gradient(90deg, #ff007f, #00dfd8, #7928ca, #ff007f);
+            background-size: 300% 300%;
+            animation: rainbowGlow 4s linear infinite;
+            z-index: -1;
+            filter: blur(8px);
+            opacity: 0.8;
+        }
+
+        /* Glassmorphic Container */
+        .glass-card {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-white min-h-screen overflow-hidden flex items-center justify-center font-sans relative">
+
+    <!-- Canvas Animasi Latar Belakang Interaktif -->
+    <canvas id="bgCanvas" class="absolute inset-0 w-full h-full z-0"></canvas>
+
+    <!-- Overlay Klik Pertama Untuk Autoplay Suara -->
+    <div id="startOverlay" class="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-md cursor-pointer transition-opacity duration-500">
+        <div class="text-center space-y-4 p-6">
+            <div class="inline-block p-4 rounded-full bg-slate-900 border border-slate-700 animate-bounce">
+                <i class="fa-solid fa-volume-high text-3xl rainbow-text"></i>
+            </div>
+            <h2 class="text-2xl font-bold rainbow-text
 
