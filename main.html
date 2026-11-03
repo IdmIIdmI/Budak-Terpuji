@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budak Terpuji KP2027 - Paparan Utama (200 Misi)</title>
+    <!-- Three.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background: #030008;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            color: #fff;
+        }
+
+        /* BAHAGIAN ATAS: MASJID 3D WARNA-WARNI & PIN MISI (55% KETINGGIAN) */
+        #top-section {
+            height: 55vh;
+            width: 100%;
+            position: relative;
+            background: radial-gradient(circle at center, #2e1065 0%, #090514 100%);
+            border-bottom: 3px solid #ec4899;
+            box-shadow: 0 0 25px rgba(236, 72, 153, 0.4);
+        }
+
+        #canvas-masjid {
+            width: 100%;
+            height: 100%;
+        }
+
+        .hud-overlay {
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .hero-badge {
+            background: rgba(15, 23, 42, 0.85);
+            border: 2px solid #38bdf8;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #38bdf8;
+            font-weight: bold;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+        }
+
+        /* KAWASAN MISI 200 (NAVIGATION GRID) */
+        .missions-container {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 700px;
+            background: rgba(0, 0, 0, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+
+        .mission-scroll-box {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 5px;
+            scroll-behavior: smooth;
+            width: 80%;
+        }
+
+        .mission-scroll-box::-webkit-scrollbar {
+            height: 4px;
+        }
+        .mission-scroll-box::-webkit-scrollbar-thumb {
+            background: #ec4899;
+            border-radius: 4px;
+        }
+
+        .mission-pin {
+            min-width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #000;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.8);
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .mission-pin:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 25px rgba(255, 255, 255, 1);
+        }
+
+        .mission-pin.locked {
+            background: #334155;
+            color: #64748b;
+            border-color: #475569;
+            box-shadow: none;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .nav-arrow-btn {
+            background: linear-gradient(90deg, #ec4899, #8b5cf6);
+            border: none;
+            color: white;
+            font-weight: bold;
+            padding: 8px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        /* BAHAGIAN BAWAH: BUDAK TERPUJI ISLAMIK WARNA-WARNI (45% KETINGGIAN) */
+        #bottom-section {
+            height: 45vh;
+            width: 100%;
+            background: radial-gradient(circle at center, #1e0936 0%, #04010a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 10px 20px;
+            position: relative;
+        }
+
+        .avatar-progress-container {
+            width: 45%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #canvas-avatar {
+            width: 100%;
+            height: 100%;
+        }
+
+        .status-panel {
+            width: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(244, 114, 182, 0.3);
+            border-radius: 18px;
+            padding: 15px 20px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+        }
+
+        .status-title {
+            font-size: 1.05rem;
+            color: #fbbf24;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            text-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ec4899, #8b5cf6, #38bdf8, #10b981);
+            transition: width 0.8s ease-in-out;
+            box-shadow: 0 0 15px #38bdf8;
+        }
+
+        .parts-status {
+            font-size: 0.78rem;
+            color: #cbd5e1;
+            line-height: 1.4;
+        }
+
+        .btn-claim {
+            padding: 12px 24px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(90deg, #ec4899, #8b5cf6);
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(236, 72, 153, 0.5);
+            transition: all 0.3s ease;
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        .btn-claim:disabled {
+            background: #334155;
+            box-shadow: none;
+            animation: none;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 10px rgba(236, 72, 153, 0.5); }
+            100% { transform: scale(1.05); box-shadow: 0 0 25px rgba(56, 189, 248, 0.9); }
+        }
+
+        .flash-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle, #ffffff, #f472b6, #38bdf8);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body onclick="playClickSound()">
+
+    <div id="flash" class="flash-overlay"></div>
+
+    <!-- BAHAGIAN ATAS: PAPARAN KEMARA TOP-VIEW MASJID 3D WARNA-WARNI -->
+    <div id="top-section">
+        <div class="hud-overlay">
+            <div class="hero-badge" id="playerDisplay">HERO: METAPURBA</div>
+            <div class="hero-badge" style="color: #fbbf24; border-color: #fbbf24;">KP2027 • TAHUN 1</div>
+        </div>
+        
+        <div id="canvas-masjid"></div>
+
+        <!-- BAR KAWASAN 200 MISI -->
+        <div class="missions-container">
+            <button class="nav-arrow-btn" onclick="scrollMissions(-200); event.stopPropagation();">◀ PREV</button>
+            <div class="mission-scroll-box" id="missionBox">
+                <!-- 200 Misi dijana automatik menerusi JavaScript -->
+            </div>
+            <button class="nav-arrow-btn" onclick="scrollMissions(200); event.stopPropagation();">NEXT ▶</button>
+        </div>
+    </div>
+
+    <!-- BAHAGIAN BAWAH: BUDAK TERPUJI ISLAMIK (PEMBENTUKAN KELAM TO BERCAHAYA) -->
+    <div id="bottom-section">
+        <div class="avatar-progress-container">
+            <div id="canvas-avatar"></div>
+        </div>
+
+        <div class="status-panel">
+            <div class="status-title">
+                <span>PEMBENTUKAN BUDAK TERPUJI</span>
+                <span id="percentText">0%</span>
+            </div>
+
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progressFill"></div>
+            </div>
+
+            <div class="parts-status" id="partsStatus">
+                <b>Status Anggota Terpuji (200 Misi):</b><br>
+                • Mata Murni: <span id="stMata" style="color:#ef4444">Belum Terbentuk (Kelam)</span><br>
+                • Tubuh & Jubah Nur: <span id="stJubah" style="color:#ef4444">Belum Terbentuk</span><br>
+                • Kopiah Cahaya Pelangi: <span id="stKopiah" style="color:#ef4444">Belum Terbentuk</span>
+            </div>
+
+            <button id="btnClaimBonus" class="btn-claim" disabled onclick="claimBonus(); event.stopPropagation();">
+                🎁 KLAIM BONUS MISI (PANCARAN NUR)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // SYSTEM AUDIO SFX - BUNYI SETIAP KLIK
+        // ==========================================
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playClickSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.08);
+            
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.08);
+        }
+
+        function playBonusSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(880, audioCtx.currentTime + 0.5);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.5);
+        }
+
+        // ==========================================
+        // DATA GAME & PENJANAAN 200 MISI
+        // ==========================================
+        let chapterCompleted = parseInt(localStorage.getItem('budakTerpuji_chapDone') || '0');
+        let bonusClaimed = parseInt(localStorage.getItem('budakTerpuji_bonusClaimed') || '0');
+        let heroName = localStorage.getItem('budakTerpuji_heroNama') || 'Satria Purba';
+
+        document.getElementById('playerDisplay').innerText = `HERO: ${heroName.toUpperCase()}`;
+
+        // Bina 200 Misi secara dinamik
+        const missionBox = document.getElementById('missionBox');
+        for (let i = 1; i <= 200; i++) {
+            const pin = document.createElement('div');
+            pin.className = 'mission-pin';
+            pin.innerText = i;
+            
+            // Buka misi jika misi sebelumnya selesai
+            if (i > 1 && i > chapterCompleted + 1) {
+                pin.classList.add('locked');
+            }
+
+            pin.onclick = (e) => {
+                e.stopPropagation();
+                playClickSound();
+                startChapter(i);
+            };
+
+            missionBox.appendChild(pin);
+        }
+
+        function scrollMissions(val) {
+            missionBox.scrollBy({ left: val, behavior: 'smooth' });
+        }
+
+        if (chapterCompleted >= 1 && bonusClaimed < chapterCompleted) {
+            document.getElementById('btnClaimBonus').disabled = false;
+        }
+
+        // ==========================================
+        // 1. SCENE MASJID 3D WARNA-WARNI (TOP-VIEW)
+        // ==========================================
+        const masjidContainer = document.getElementById('canvas-masjid');
+        const sceneM = new THREE.Scene();
+        sceneM.background = new THREE.Color(0x090514);
+
+        const cameraM = new THREE.PerspectiveCamera(45, masjidContainer.clientWidth / masjidContainer.clientHeight, 0.1, 1000);
+        cameraM.position.set(0, 11, 9);
+        cameraM.lookAt(0, 0, 0);
+
+        const rendererM = new THREE.WebGLRenderer({ antialias: true });
+        rendererM.setSize(masjidContainer.clientWidth, masjidContainer.clientHeight);
+        masjidContainer.appendChild(rendererM.domElement);
+
+        // Pencahayaan Warna-Warni Futuristik
+        const ambM = new THREE.AmbientLight(0xffffff, 0.5);
+        sceneM.add(ambM);
+
+        const lightPink = new THREE.PointLight(0xec4899, 2, 20);
+        lightPink.position.set(-5, 8, 5);
+        sceneM.add(lightPink);
+
+        const lightCyan = new THREE.PointLight(0x38bdf8, 2, 20);
+        lightCyan.position.set(5, 8, -5);
+        sceneM.add(lightCyan);
+
+        const lightGold = new THREE.PointLight(0xfbbf24, 2, 20);
+        lightGold.position.set(0, 10, 0);
+        sceneM.add(lightGold);
+
+        // Model Masjid 3D (Warna-warni Neon)
+        const masjidGroup = new THREE.Group();
+
+        const baseGeo = new THREE.BoxGeometry(4.8, 1.4, 4.8);
+        const baseMat = new THREE.MeshStandardMaterial({ color: 0x1e1b4b, roughness: 0.2, metalness: 0.5 });
+        const baseMesh = new THREE.Mesh(baseGeo, baseMat);
+        masjidGroup.add(baseMesh);
+
+        // Kubah Emas Bercahaya
+        const domeGeo = new THREE.SphereGeometry(1.3, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+        const domeMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.9, roughness: 0.1, emissive: 0xd97706, emissiveIntensity: 0.4 });
+        const dome = new THREE.Mesh(domeGeo, domeMat);
+        dome.position.y = 0.7;
+        masjidGroup.add(dome);
+
+        // Menara 4 Penjuru (Warna Neon)
+        const minaretGeo = new THREE.CylinderGeometry(0.22, 0.28, 3.8, 16);
+        const minaretMat = new THREE.MeshStandardMaterial({ color: 0x311042, metalness: 0.6 });
+        const positions = [[-2.1, -2.1], [2.1, -2.1], [-2.1, 2.1], [2.1, 2.1]];
+        
+        positions.forEach(pos => {
+            const minaret = new THREE.Mesh(minaretGeo, minaretMat);
+            minaret.position.set(pos[0], 1.9, pos[1]);
+            
+            const miniDome = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16, 0, Math.PI*2, 0, Math.PI/2), domeMat);
+            miniDome.position.y = 1.9;
+            minaret.add(miniDome);
+
+            masjidGroup.add(minaret);
+        });
+
+        sceneM.add(masjidGroup);
+
+        // ==========================================
+        // 2. SCENE BUDAK TERPUJI ISLAMIK (200 MISI)
+        // ==========================================
+        const avatarContainer = document.getElementById('canvas-avatar');
+        const sceneA = new THREE.Scene();
+        const cameraA = new THREE.PerspectiveCamera(45, avatarContainer.clientWidth / avatarContainer.clientHeight, 0.1, 1000);
+        cameraA.position.set(0, 1.1, 3.0);
+
+        const rendererA = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        rendererA.setSize(avatarContainer.clientWidth, avatarContainer.clientHeight);
+        avatarContainer.appendChild(rendererA.domElement);
+
+        const ambA = new THREE.AmbientLight(0xffffff, 0.4);
+        sceneA.add(ambA);
+        const lightPurple = new THREE.PointLight(0xa855f7, 2, 10);
+        lightPurple.position.set(0, 2, 2);
+        sceneA.add(lightPurple);
+
+        const avatarGroup = new THREE.Group();
+
+        const darkMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.9 });
+        const eyeGlowMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+        const jubahGlowMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2, emissive: 0xec4899, emissiveIntensity: 0.3 });
+        const kopiahGlowMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.8, emissive: 0xf59e0b, emissiveIntensity: 0.5 });
+
+        // Kepala
+        const headA = new THREE.Mesh(new THREE.SphereGeometry(0.4, 32, 32), bonusClaimed >= 1 ? jubahGlowMat : darkMat);
+        headA.position.y = 0.9;
+        avatarGroup.add(headA);
+
+        // Mata
+        const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 16), bonusClaimed >= 1 ? eyeGlowMat : darkMat);
+        eyeL.position.set(-0.15, 0.95, 0.36);
+        const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 16), bonusClaimed >= 1 ? eyeGlowMat : darkMat);
+        eyeR.position.set(0.15, 0.95, 0.36);
+        avatarGroup.add(eyeL);
+        avatarGroup.add(eyeR);
+
+        // Jubah
+        const bodyA = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.45, 1.1, 32), bonusClaimed >= 5 ? jubahGlowMat : darkMat);
+        bodyA.position.y = 0.15;
+        avatarGroup.add(bodyA);
+
+        // Kopiah
+        const kopiah = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.41, 0.2, 32), bonusClaimed >= 10 ? kopiahGlowMat : darkMat);
+        kopiah.position.y = 1.25;
+        avatarGroup.add(kopiah);
+
+        sceneA.add(avatarGroup);
+
+        function updateProgressUI() {
+            // Peratusan dikira berdasarkan 200 Misi
+            let percent = Math.min(Math.round((bonusClaimed / 200) * 100), 100);
+            document.getElementById('percentText').innerText = `${percent}%`;
+            document.getElementById('progressFill').style.width = `${percent}%`;
+
+            if (bonusClaimed >= 1) {
+                document.getElementById('stMata').innerText = "BERCAHAYA NUR (TERBENTUK)";
+                document.getElementById('stMata').style.color = "#38bdf8";
+            }
+            if (bonusClaimed >= 5) {
+                document.getElementById('stJubah').innerText = "JUBAH ISLAMIK NUR (TERBENTUK)";
+                document.getElementById('stJubah').style.color = "#ec4899";
+            }
+            if (bonusClaimed >= 10) {
+                document.getElementById('stKopiah').innerText = "KOPIAH CAHAYA PELANGI (TERBENTUK)";
+                document.getElementById('stKopiah').style.color = "#fbbf24";
+            }
+        }
+        updateProgressUI();
+
+        // Loop Animasi 3D
+        function animate() {
+            requestAnimationFrame(animate);
+            masjidGroup.rotation.y += 0.004; // Masjid berputar
+            avatarGroup.rotation.y += 0.012; // Avatar berputar
+            rendererM.render(sceneM, cameraM);
+            rendererA.render(sceneA, cameraA);
+        }
+        animate();
+
+        // KLAIM BONUS MISI
+        function claimBonus() {
+            playBonusSound();
+            const flash = document.getElementById('flash');
+            flash.style.opacity = '1';
+
+            setTimeout(() => {
+                bonusClaimed += 1;
+                localStorage.setItem('budakTerpuji_bonusClaimed', bonusClaimed);
+
+                eyeL.material = eyeGlowMat;
+                eyeR.material = eyeGlowMat;
+
+                updateProgressUI();
+                flash.style.opacity = '0';
+                document.getElementById('btnClaimBonus').disabled = true;
+                
+                alert("✨ ALHAMDULILLAH! Cahaya Nur Misi Telah Dipancarkan ke Tubuh Budak Terpuji!");
+            }, 500);
+        }
+
+        function startChapter(num) {
+            if (num > 1 && num > chapterCompleted + 1) {
+                alert(`Selesaikan Misi ${num - 1} dahulu untuk membuka Misi ${num}!`);
+            } else {
+                window.location.href = `chapter${num}.html`;
+            }
+        }
+    </script>
+</body>
+</html>
