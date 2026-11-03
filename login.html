@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budak Terpuji KP2027 - Log Masuk</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5),
+                        0 0 30px rgba(168, 85, 247, 0.2);
+            text-align: center;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 16px;
+            background: linear-gradient(90deg, #ec4899, #8b5cf6);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #f472b6, #38bdf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            font-weight: 600;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #a855f7;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+        }
+
+        .avatar-selection {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .avatar-option {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .avatar-option:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .avatar-option.selected {
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.15);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+        }
+
+        .avatar-icon {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .avatar-name {
+            font-size: 0.75rem;
+            color: #e2e8f0;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(90deg, #8b5cf6, #ec4899);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px rgba(139, 92, 246, 0.5);
+        }
+
+        .footer-note {
+            margin-top: 25px;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <span class="badge">KP2027 • TAHUN 1</span>
+        <h1>Budak Terpuji</h1>
+        <p class="subtitle">Daftarkan diri anda untuk memulakan perjalanan alam di sebalik mata</p>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="playerName">Nama Murid Terpuji:</label>
+                <input type="text" id="playerName" placeholder="Masukkan nama anda..." required autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label>Pilih Karekter (KP2027):</label>
+                <div class="avatar-selection">
+                    <div class="avatar-option selected" onclick="selectAvatar('Adam', '👦🏻', this)">
+                        <span class="avatar-icon">👦🏻</span>
+                        <span class="avatar-name">Adam</span>
+                    </div>
+                    <div class="avatar-option" onclick="selectAvatar('Nur', '👧🏽', this)">
+                        <span class="avatar-icon">👧🏽</span>
+                        <span class="avatar-name">Nur</span>
+                    </div>
+                    <div class="avatar-option" onclick="selectAvatar('Raihan', '👦🏽', this)">
+                        <span class="avatar-icon">👦🏽</span>
+                        <span class="avatar-name">Raihan</span>
+                    </div>
+                    <div class="avatar-option" onclick="selectAvatar('Mia', '👧🏻', this)">
+                        <span class="avatar-icon">Mia</span>
+                        <span class="avatar-name">Mia</span>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">MULA PERJALANAN ➔</button>
+        </form>
+
+        <div class="footer-note">
+            Kurikulum Persekolahan 2027 • Pembentukan Sahsiah Murid
+        </div>
+    </div>
+
+    <script>
+        let selectedCharacter = 'Adam';
+        let selectedIcon = '👦🏻';
+
+        function selectAvatar(name, icon, element) {
+            selectedCharacter = name;
+            selectedIcon = icon;
+            
+            document.querySelectorAll('.avatar-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            element.classList.add('selected');
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const nameInput = document.getElementById('playerName').value.trim();
+            
+            if (nameInput) {
+                // Simpan data murid ke localStorage
+                localStorage.setItem('budakTerpuji_nama', nameInput);
+                localStorage.setItem('budakTerpuji_karekter', selectedCharacter);
+                localStorage.setItem('budakTerpuji_icon', selectedIcon);
+
+                // Pergi ke fail intro.html selepas log masuk
+                window.location.href = 'intro.html';
+            }
+        }
+    </script>
+</body>
+</html>
